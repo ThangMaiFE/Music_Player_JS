@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Music player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./assets/css/main.css" />
+  </head>
+  <body>
+    <div class="player">
+      <div class="dashboard">
+        <h4>Now playing:</h4>
+        <h1>String 57th & 9th</h1>
+        <div class="cd">
+            <div class="cd__thumb"></div>
+        </div>
+        <div class="control">
+          <div class="btn btn__repeat">
+            <i class="fas fa-redo"></i>
+          </div>
+          <div class="btn btn__prev">
+            <i class="fas fa-step-backward"></i>
+          </div>
+          <div class="btn btn__play">
+            <i class="btn__pause fas fa-pause icon-pause"></i>
+            <i class="btn__playing fas fa-play icon-play"></i>
+          </div>
+          <div class="btn btn__next">
+            <i class="fas fa-step-forward"></i>
+          </div>
+          <div class="btn btn__ramdom">
+            <i class="fas fa-random"></i>
+          </div>
+        </div>
+        <input
+          id="progress"
+          class="progress"
+          type="range"
+          value="0"
+          step="1"
+          min="0"
+          max="100"
+        />
+        <audio id="audio" src=""></audio>
+      </div>
+
+      <div class="playlist">
+
+      </div>
+    </div>
+
+    <script>
+      const $ = document.querySelector.bind(document);
+      const $$ = document.querySelectorAll.bind(document);
+
+      //tao data tren localStorage
+      const PLAYER_STORAGE_KEY = 'Music-Player'
+
+      var app = {
+        //tao gia tri ban dau hoac co chu dich
+        currentSongIndex: 0,
+        isPlaying: false,
+        isRamdom: false,
+        isRepeat: false,
+        //get data tu local
+        config: JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY)) || {},
+       
+        //dinh nghia thuoc tinh bai hat dau tien vao mang
+        defineProperties: function() {
+          Object.defineProperty(this, 'currentSong', {
+            get: function() {
+              return this.songs[this.currentSongIndex]
+            }
+          })
+        },
+
+        //mang du lieu
+        songs: [
+          {
+            name: 'Vì Mẹ Anh Bắt Chia Tay',
+            singer:'Miu Lê',
+            path: './assets/music/ViMeAnhBatChiaTay-MiuLe-7503053.mp3',
+            image: './assets/img/m1.jpg'
+          },
+          {
+            name: 'Tệ Thật, Anh Nhớ Em',
+            singer:'Thanh Hưng',
+            path: './assets/music/TeThatAnhNhoEm-ThanhHung-7132634.mp3',
+            image: './assets/img/m2.jpg'
+          },
+          {
+            name: 'Hai Mươi Hai',
+            singer:'Hứa Kim Tuyền, AMEE',
+            path: './assets/music/HaiMuoiHai22-HuaKimTuyenAMEE-7231237.mp3',
+            image: './assets/img/m3.jpg'
+          },
+          {
+            name: 'Một Ngàn Nỗi Đau',
+            singer:'Văn Mai Hương, Hứa Kim Tuyền',
+            path: './assets/music/MotNganNoiDau-VanMaiHuongHuaKimTuyen-7561897.mp3',
+            image: './assets/img/m4.jpg'
+          },
+          {
+            name: 'Đế Vương',
+            singer:'Đình Dũng, ACV',
+            path: './assets/music/DeVuong-DinhDungACV-7121634.mp3',
+            image: './assets/img/m5.jpg'
+          },
+          {
+            name: 'Yêu Đương Khó Quá Thì Chạy Về Khóc Với Anh',
+            singer:'ERIK',
+            path: './assets/music/YeuDuongKhoQuaThiChayVeKhocVoiAnh-ERIK-7128950.mp3',
+            image: './assets/img/m6.jpg'
+          },
+          {
+            name: 'Ánh Sao Và Bầu Trời',
+            singer:'T.R.I',
+            path: './assets/music/AnhSaoVaBauTroi-TRI-7085073.mp3',
+            image: './assets/img/m7.jpg'
+          },
+          {
+            name: 'Là Do Em Xui Thôi',
+            singer:'Khói, Sofia (Đan Trang), Châu Đăng Khoa',
+            path: './assets/music/LaDoEmXuiThoi-KhoiSofiaDanTrangChauDangKhoa-7125647.mp3',
+            image: './assets/img/m8.jpg'
+          },
+        ],
+        
+        //set data len local
+        setConfig: function(key, value) {
+          this.config[key] = value
+          localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify(this.config))
+        },
+
+        
+        //xuat danh sach nhac
+        render: function() {
+          const playlist = $('.playlist')
+          
+          const htmls = this.songs.map((song, index) => { 
+            return `
+            <div class="song ${index === this.currentSongIndex ? 'active' : '' } " data-index="${index}">
+              <div class="song__img" style="background-image: url(${song.image});"></div>
+              <div class="song__content">
+                <h3 class="song__name">${song.name}</h3>
+                <p class="song__author">${song.singer}</p>
+              </div>
+              <div class="song__icon"><i class="fas fa-ellipsis-h"></i></div>
+            </div>
+            `
+          })
+          playlist.innerHTML = htmls.join('')  
+        },
+
+        //xu ly voi Events
+        handleEvents: function() {
+          const cd = $('.cd')
+          const cdWidth = cd.offsetWidth
+          const playBtn = $('.btn__play')
+          const audio = $('#audio')
+          const player = $('.player')
+          const progress = $('.progress')
+          const cdThumb = $('.cd__thumb')
+          const btnNext = $('.btn__next')
+          const btnPrev = $('.btn__prev')
+          const btnRamdom = $('.btn__ramdom')
+          const btnRepeat = $('.btn__repeat')
+          const playlist = $('.playlist')
+
+
+          //thu nho header khi stroll
+          document.onscroll = function() {
+            const scrollTop = window.scrollY || document.documentElement.scrollTop
+            const newCdWidth =  cdWidth - scrollTop
+            cd.style.width = newCdWidth > 0 ? newCdWidth + 'px' : 0
+            cd.style.opacity = newCdWidth / cdWidth
+          }
+          
+          //animation cd xoay
+          cdThumbAnimate = cdThumb.animate(
+            [
+              {transform: 'rotate(360deg)'}
+            ], {
+              duration: 10000,
+              iterations: Infinity
+            }
+          )
+          cdThumbAnimate.pause()
+
+          //click to play song
+          playBtn.onclick = function() {
+            if (app.isPlaying) {
+              audio.pause()
+            }else {
+              audio.play()
+            }
+          }
+            //khi song dc play
+              audio.onplay = function() {
+                app.isPlaying = true
+                player.classList.add('playing')
+                cdThumbAnimate.play()
+              }
+              //khi song bi pause
+              audio.onpause = function() {
+                app.isPlaying = false
+                player.classList.remove('playing')
+                cdThumbAnimate.pause()
+              }
+                   
+          //tien trinh bai hat khi play
+          audio.ontimeupdate = function() {
+            if(audio.duration) {
+              const progressPercent = Math.floor(audio.currentTime / audio.duration * 100)
+              progress.value = progressPercent
+            }
+          }
+
+          //khi tua bai hat
+          progress.onchange = function(e) {
+            const seekTime = audio.duration / 100 * e.target.value
+            audio.currentTime = seekTime
+            // audio.play()
+          }
+
+          //next bai hat
+          btnNext.onclick = function() {
+            if(app.isRamdom){
+              app.playRamdomSong()
+            }else{
+              app.nextSong()
+            }
+            audio.play()
+            app.render()   
+            app.scrollToActiveSong()
+          }
+
+          //prev bai hat
+          btnPrev.onclick = function() {
+            if(app.isRamdom){
+              app.playRamdomSong()
+            }else{
+              app.prevSong()
+            }
+            audio.play()
+            app.render()              
+            app.scrollToActiveSong()
+          }
+
+          //bat tat ramdom mode
+          btnRamdom.onclick = function() {
+            app.isRamdom = !app.isRamdom
+            app.setConfig('isRamdom', app.isRamdom)
+            btnRamdom.classList.toggle('active', app.isRamdom)
+          }
+
+          //hanh dong khi bai hat ket thuc
+          audio.onended = function() {
+            // if(app.isRamdom){
+            //   app.playRamdomSong()
+            // }else{
+            //   app.nextSong()
+            // }
+            // audio.play()
+            if(app.isRepeat) {
+              audio.play()
+            }else {
+              btnNext.click()      
+            }
+          }
+
+          //bat tat repeat mode
+          btnRepeat.onclick = function() {
+            app.isRepeat = !app.isRepeat
+            app.setConfig('isRepeat', app.isRepeat)
+            btnRepeat.classList.toggle('active', app.isRepeat)
+          }
+
+          //khi click vao playlist chon song to play
+          playlist.onclick = function(e) {
+            const getSong = e.target.closest('.song:not(.active)')
+            if(getSong || e.target.closest('.song__icon')) {
+              //nhan vao song to play
+              if(getSong) {
+                const newIdSong = Number(getSong.getAttribute('data-index') || getSong.dataset.index)
+                app.currentSongIndex = newIdSong
+                app.loadCurrentSong()
+                app.render()
+                audio.play()
+
+              }
+              //nhan vao 3 cham 
+            }
+          }
+
+        },
+
+        //next song
+        nextSong: function() {
+          this.currentSongIndex++
+          if(this.currentSongIndex >= this.songs.length) {
+            this.currentSongIndex = 0
+          }
+          this.loadCurrentSong()
+        },
+
+        //prev song
+        prevSong: function() {
+          this.currentSongIndex--
+          if(this.currentSongIndex < 0) {
+            this.currentSongIndex = this.songs.length - 1
+          }
+          this.loadCurrentSong()
+        },
+
+        //xuat du lieu bai hat dau tien vao UI
+        loadCurrentSong: function() {
+          const heading = $('h1')
+          const imgCD = $('.cd__thumb')
+          const audioSrc = $('#audio')
+
+          heading.textContent = this.currentSong.name
+          imgCD.style.backgroundImage = `url('${this.currentSong.image}')`
+          audioSrc.src = this.currentSong.path
+
+        },
+
+        //xu ly ramdom mode
+        playRamdomSong: function() {
+          let newIndex
+          do{
+            newIndex = Math.floor(Math.random() * this.songs.length)
+          }while (newIndex === this.currentSongIndex)
+          this.currentSongIndex = newIndex
+          this.loadCurrentSong()
+        },
+
+        //xu ly auto scroll bai hat khi next vs prev
+        scrollToActiveSong: function() {
+          setTimeout(() => {
+            const defineBlock = this.currentSongIndex > 2 ? 'nearest' : 'center'
+            $('.song.active').scrollIntoView({
+                behavior: 'smooth',
+                block: defineBlock
+            })
+          })
+        },
+
+        //gan data tu local vao button repeat vs ramdom ban dau
+        loadConfig: function() {
+          this.isRamdom = this.config.isRamdom
+          this.isRepeat = this.config.isRepeat
+          console.log(this.isRamdom)
+          
+        },
+
+        //tom gon logic
+        start: function() {
+          const btnRamdom = $('.btn__ramdom')
+          const btnRepeat = $('.btn__repeat')
+
+          console.log(this)
+          this.loadConfig()
+          this.defineProperties()
+          this.handleEvents()
+          this.loadCurrentSong()
+          this.render()
+
+          //hien thi trang thai cua button repeat vs ramdom  
+          btnRepeat.classList.toggle('active', app.isRepeat)
+          btnRamdom.classList.toggle('active', app.isRamdom)
+
+        }
+      }
+
+      app.start();
+
+    </script> 
+
+  </body>
+</html>
