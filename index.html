@@ -56,6 +56,13 @@
       <div class="playlist">
 
       </div>
+
+      <div class="volume-control">
+        <input class="volume-control__progress" type="range" min="0" max="100" value="50">
+        <progress min="0" max="100" value="50"></progress>
+        <div class="volume-control__value">50</div>
+      </div>
+
     </div>
 
     <script>
@@ -175,6 +182,10 @@
           const btnRamdom = $('.btn__ramdom')
           const btnRepeat = $('.btn__repeat')
           const playlist = $('.playlist')
+          const pointVolume = $('.volume-control__progress')
+          const barVolume = $('.volume-control progress')
+          const volumeControl = $('.volume-control')
+          const volumeValue = $('.volume-control__value')
 
 
           //thu nho header khi stroll
@@ -302,6 +313,14 @@
             }
           }
 
+          //tang giam am luong
+          volumeControl.oninput = function() {
+            barVolume.value = pointVolume.value
+            volumeValue.innerHTML= pointVolume.value
+            audio.volume = pointVolume.value / 100
+          }
+
+
         },
 
         //next song
@@ -363,10 +382,18 @@
           
         },
 
+        //xu ly ui volume control
+        volumeControlUI: function() {
+          
+
+
+        },
+
         //tom gon logic
         start: function() {
           const btnRamdom = $('.btn__ramdom')
           const btnRepeat = $('.btn__repeat')
+          const audio = $('#audio')
 
           console.log(this)
           this.loadConfig()
@@ -378,6 +405,9 @@
           //hien thi trang thai cua button repeat vs ramdom  
           btnRepeat.classList.toggle('active', app.isRepeat)
           btnRamdom.classList.toggle('active', app.isRamdom)
+
+          //am thanh mac dinh
+          audio.volume = 0.5
 
         }
       }
